@@ -20,7 +20,7 @@ export async function GET() {
 
     const issues = await res.json();
     
-    const tasks = {
+    const tasks: { todo: any[], in_progress: any[], done: any[] } = {
       todo: [],
       in_progress: [],
       done: []
