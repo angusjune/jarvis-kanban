@@ -10,6 +10,7 @@ export default function ContentSlicer() {
   const handleSlice = async () => {
     if (!url) return;
     setStatus('processing');
+    setClipUrl('');
     
     try {
       const res = await fetch('/api/slice', {
@@ -18,11 +19,16 @@ export default function ContentSlicer() {
         body: JSON.stringify({ url })
       });
       
-      const data = await res.json();
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || 'Failed to slice');
+      }
+
+      // Handle Blob Response
+      const blob = await res.blob();
+      const objectUrl = URL.createObjectURL(blob);
       
-      if (data.error) throw new Error(data.error);
-      
-      setClipUrl(data.clipPath); // Path relative to public folder
+      setClipUrl(objectUrl);
       setStatus('done');
     } catch (e) {
       console.error(e);
@@ -56,7 +62,7 @@ export default function ContentSlicer() {
         </button>
 
         {status === 'error' && (
-          <div className="text-red-500 text-center text-sm">Protocol Failure. Check logs.</div>
+          <div className="text-red-500 text-center text-sm">Protocol Failure. Check console.</div>
         )}
 
         {status === 'done' && clipUrl && (
@@ -65,7 +71,7 @@ export default function ContentSlicer() {
             <video src={clipUrl} controls className="w-full rounded border border-gray-800" />
             <a 
               href={clipUrl} 
-              download 
+              download="jarvis_clip.mp4"
               className="block text-center text-xs text-gray-500 mt-2 hover:text-white"
             >
               [DOWNLOAD ARTIFACT]
